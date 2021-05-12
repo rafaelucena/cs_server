@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Item;
+use App\Service\ApiService;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -18,14 +19,6 @@ class ApiController extends Controller
      */
     public function listAction(Request $request): JsonResponse
     {
-        $response = [
-            'success' => false,
-            'data' => [
-                'quantity' => 0,
-                'list' => [],
-            ],
-        ];
-
         $filter = $request->query->all();
 
         /** @var EntityManager **/
@@ -35,7 +28,7 @@ class ApiController extends Controller
         $qb->select(['i'])
            ->from(Item::class, 'i');
 
-        if (empty($filter['has_more_than']) === false) {
+        if (isset($filter['has_more_than']) === true && $filter['has_more_than'] !== null) {
             $qb->andWhere('i.amount > :value')
                ->setParameter('value', $filter['has_more_than']);
         } elseif (isset($filter['has_stock']) === true) {
@@ -51,11 +44,8 @@ class ApiController extends Controller
         $items = $qb->getQuery()
                     ->getResult();
 
-        foreach ($items as $item) {
-            $response['success'] = true;
-            $response['data']['quantity']++;
-            $response['data']['list'][] = $item->toArray();
-        }
+        $service = new ApiService(ApiService::LIST, $request);
+        $response = $service->build($items);
 
         return new JsonResponse($response);
     }
@@ -67,18 +57,10 @@ class ApiController extends Controller
      */
     public function getAction(int $id): JsonResponse
     {
-        $response = [
-            'success' => false,
-            'data' => [],
-        ];
-
         $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
-        if ($item !== null) {
-            $response = [
-                'success' => true,
-                'data' => $item->toArray(),
-            ];
-        }
+
+        $service = new ApiService(ApiService::GET);
+        $response = $service->build($item);
 
         return new JsonResponse($response);
     }
@@ -90,11 +72,6 @@ class ApiController extends Controller
      */
     public function postAction(Request $request): JsonResponse
     {
-        $response = [
-            'success' => false,
-            'data' => [],
-        ];
-
         $content = json_decode($request->getContent(), true);
 
         $item = new Item();
@@ -105,12 +82,8 @@ class ApiController extends Controller
         $em->persist($item);
         $em->flush();
 
-        if ($item->getId() !== null) {
-            $response = [
-                'success' => true,
-                'data' => $item->toArray(),
-            ];
-        }
+        $service = new ApiService(ApiService::POST);
+        $response = $service->build($item);
 
         return new JsonResponse($response);
     }
@@ -123,26 +96,19 @@ class ApiController extends Controller
      */
     public function putAction(int $id, Request $request): JsonResponse
     {
-        $response = [
-            'success' => false,
-            'data' => [],
-        ];
-
         $content = json_decode($request->getContent(), true);
         $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
         if ($item !== null) {
             $item->setName($content['name'])
                  ->setAmount($content['amount']);
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($item);
+            $em->flush();
         }
 
-        $em = $this->getDoctrine()->getManager();
-        $em->persist($item);
-        $em->flush();
-
-        $response = [
-            'success' => true,
-            'data' => $item->toArray(),
-        ];
+        $service = new ApiService(ApiService::PUT);
+        $response = $service->build($item);
 
         return new JsonResponse($response);
     }
@@ -154,22 +120,15 @@ class ApiController extends Controller
      */
     public function deleteAction(int $id): JsonResponse
     {
-        $response = [
-            'success' => false,
-            'data' => [],
-        ];
-
         $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
         if ($item !== null) {
             $em = $this->getDoctrine()->getManager();
             $em->remove($item);
             $em->flush();
-
-            $response = [
-                'success' => true,
-                'data' => [],
-            ];
         }
+
+        $service = new ApiService(ApiService::DELETE);
+        $response = $service->build($item);
 
         return new JsonResponse($response);
     }
