@@ -19,30 +19,9 @@ class ApiController extends Controller
      */
     public function listAction(Request $request): JsonResponse
     {
-        $filter = $request->query->all();
+        $params = $request->query->all();
 
-        /** @var EntityManager **/
-        $em = $this->getDoctrine()->getManager();
-        /** @var QueryBuilder **/
-        $qb = $em->createQueryBuilder();
-        $qb->select(['i'])
-           ->from(Item::class, 'i');
-
-        if (isset($filter['has_more_than']) === true && $filter['has_more_than'] !== null) {
-            $qb->andWhere('i.amount > :value')
-               ->setParameter('value', $filter['has_more_than']);
-        } elseif (isset($filter['has_stock']) === true) {
-            if ($filter['has_stock'] === 'true') {
-                $qb->andWhere('i.amount > :value')
-                   ->setParameter('value', 0);
-            } else {
-                $qb->andWhere('i.amount = :value')
-                   ->setParameter('value', 0);
-            }
-        }
-
-        $items = $qb->getQuery()
-                    ->getResult();
+        $items = $this->getDoctrine()->getRepository(Item::class)->findByParams($params);
 
         $service = new ApiService(ApiService::LIST, $request);
         $response = $service->build($items);
