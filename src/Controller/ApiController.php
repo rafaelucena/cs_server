@@ -11,7 +11,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ApiController extends Controller
 {
-    public function listAction(Request $request)
+    /**
+     * @param Request $request
+     *
+     * @return JsonResponse
+     */
+    public function listAction(Request $request): JsonResponse
     {
         $response = [
             'success' => false,
@@ -55,7 +60,12 @@ class ApiController extends Controller
         return new JsonResponse($response);
     }
 
-    public function getAction(int $id)
+    /**
+     * @param int $id
+     *
+     * @return JsonResponse
+     */
+    public function getAction(int $id): JsonResponse
     {
         $response = [
             'success' => false,
@@ -73,7 +83,12 @@ class ApiController extends Controller
         return new JsonResponse($response);
     }
 
-    public function postAction(Request $request)
+    /**
+     * @param Request $request
+     *
+     * @return JsonResponse
+     */
+    public function postAction(Request $request): JsonResponse
     {
         $response = [
             'success' => false,
@@ -100,7 +115,13 @@ class ApiController extends Controller
         return new JsonResponse($response);
     }
 
-    public function putAction(int $id, Request $request)
+    /**
+     * @param int $id
+     * @param Request $request
+     *
+     * @return JsonResponse
+     */
+    public function putAction(int $id, Request $request): JsonResponse
     {
         $response = [
             'success' => false,
@@ -126,7 +147,12 @@ class ApiController extends Controller
         return new JsonResponse($response);
     }
 
-    public function deleteAction(int $id)
+    /**
+     * @param int $id
+     *
+     * @return JsonResponse
+     */
+    public function deleteAction(int $id): JsonResponse
     {
         $response = [
             'success' => false,
