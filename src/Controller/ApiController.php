@@ -4,8 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Item;
 use App\Service\ApiService;
+use App\Service\RequestService;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,12 +19,19 @@ class ApiController extends Controller
      */
     public function listAction(Request $request): JsonResponse
     {
-        $params = $request->query->all();
+        $apiService = new ApiService(ApiService::LIST);
 
+        $items = [];
+        $requestService = new RequestService($request);
+        if ($requestService->validateRequest() === false) {
+            $response = $apiService->build($items, $requestService->getErrors());
+            return new JsonResponse($response);
+        }
+
+        $params = $request->query->all();
         $items = $this->getDoctrine()->getRepository(Item::class)->findByParams($params);
 
-        $service = new ApiService(ApiService::LIST, $request);
-        $response = $service->build($items);
+        $response = $apiService->build($items);
 
         return new JsonResponse($response);
     }
@@ -36,11 +43,15 @@ class ApiController extends Controller
      */
     public function getAction(int $id): JsonResponse
     {
+        $apiService = new ApiService(ApiService::GET);
+
         $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
+        if ($item === null) {
+            $response = $apiService->build($item, 'Item was not found.');
+            return new JsonResponse($response);
+        }
 
-        $service = new ApiService(ApiService::GET);
-        $response = $service->build($item);
-
+        $response = $apiService->build($item);
         return new JsonResponse($response);
     }
 
@@ -51,18 +62,30 @@ class ApiController extends Controller
      */
     public function postAction(Request $request): JsonResponse
     {
+        $apiService = new ApiService(ApiService::POST);
+        $requestService = new RequestService($request);
+        $item = null;
+        if ($requestService->validateRequest() === false) {
+            $response = $apiService->build($item, $requestService->getErrors());
+            return new JsonResponse($response);
+        }
+
         $content = json_decode($request->getContent(), true);
+        $unrelatedItem = $this->getDoctrine()->getRepository(Item::class)->findByName($content['name']);
+        if ($unrelatedItem !== null) {
+            $response = $apiService->build($item, 'There is already one product with this name.');
+            return new JsonResponse($response);
+        }
 
         $item = new Item();
         $item->setName($content['name'])
-             ->setAmount($content['amount']);
+                ->setAmount($content['amount']);
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($item);
         $em->flush();
 
-        $service = new ApiService(ApiService::POST);
-        $response = $service->build($item);
+        $response = $apiService->build($item, $requestService->getErrors());
 
         return new JsonResponse($response);
     }
@@ -75,20 +98,40 @@ class ApiController extends Controller
      */
     public function putAction(int $id, Request $request): JsonResponse
     {
-        $content = json_decode($request->getContent(), true);
-        $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
-        if ($item !== null) {
-            $item->setName($content['name'])
-                 ->setAmount($content['amount']);
+        $apiService = new ApiService(ApiService::PUT);
 
-            $em = $this->getDoctrine()->getManager();
-            $em->persist($item);
-            $em->flush();
+        $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
+        if ($item === null) {
+            $response = $apiService->build($item, 'Item was not found.');
+            return new JsonResponse($response);
         }
 
-        $service = new ApiService(ApiService::PUT);
-        $response = $service->build($item);
+        $requestService = new RequestService($request);
+        if ($requestService->validateRequest() === false) {
+            $response = $apiService->build($item, $requestService->getErrors());
+            return new JsonResponse($response);
+        }
 
+        $content = json_decode($request->getContent(), true);
+        if (isset($content['name']) === true) {
+            $unrelatedItem = $this->getDoctrine()->getRepository(Item::class)->findByName($content['name'], $id);
+            if ($unrelatedItem !== null) {
+                $response = $apiService->build($item, 'There is already another product with this name.');
+                return new JsonResponse($response);
+            }
+
+            $item->setName($content['name']);
+        }
+
+        if (isset($content['amount']) === true) {
+            $item->setAmount($content['amount']);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($item);
+        $em->flush();
+
+        $response = $apiService->build($item);
         return new JsonResponse($response);
     }
 
@@ -99,15 +142,19 @@ class ApiController extends Controller
      */
     public function deleteAction(int $id): JsonResponse
     {
+        $apiService = new ApiService(ApiService::DELETE);
+
         $item = $this->getDoctrine()->getRepository(Item::class)->find($id);
-        if ($item !== null) {
-            $em = $this->getDoctrine()->getManager();
-            $em->remove($item);
-            $em->flush();
+        if ($item === null) {
+            $response = $apiService->build($item, 'Item was not found.');
+            return new JsonResponse($response);
         }
 
-        $service = new ApiService(ApiService::DELETE);
-        $response = $service->build($item);
+        $em = $this->getDoctrine()->getManager();
+        $em->remove($item);
+        $em->flush();
+
+        $response = $apiService->build($item);
 
         return new JsonResponse($response);
     }
