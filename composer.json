@@ -12,6 +12,11 @@
         "symfony/yaml": "3.4.*"
     },
     "require-dev": {
+        "composer/package-versions-deprecated": "1.11.99.1",
+        "doctrine/doctrine-bundle": "^1.12",
+        "doctrine/doctrine-migrations-bundle": "^3.0",
+        "doctrine/orm": "^2.7",
+        "symfony/proxy-manager-bridge": "^3.4",
         "symfony/web-server-bundle": "3.4.*"
     },
     "config": {
