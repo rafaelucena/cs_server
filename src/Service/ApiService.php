@@ -30,19 +30,19 @@ class ApiService
      *
      * @return array
      */
-    public function build($content): array
+    public function build($content, string $message = ''): array
     {
         switch ($this->type) {
             case self::LIST:
-                return $this->buildList($content);
+                return $this->buildList($content, $message);
             case self::GET:
-                return $this->buildGet($content);
+                return $this->buildGet($content, $message);
             case self::POST:
-                return $this->buildPost($content);
+                return $this->buildPost($content, $message);
             case self::PUT:
-                return $this->buildPut($content);
+                return $this->buildPut($content, $message);
             case self::DELETE:
-                return $this->buildDelete($content);
+                return $this->buildDelete($content, $message);
         }
     }
 
@@ -51,7 +51,7 @@ class ApiService
      *
      * @return array
      */
-    private function buildList(array $items): array
+    private function buildList(array $items, string $message = ''): array
     {
         $response = [
             'success' => false,
@@ -60,6 +60,14 @@ class ApiService
                 'list' => [],
             ],
         ];
+        if (empty($message) === false) {
+            $response['error'] = $message;
+            return $response;
+        }
+        if (empty($items) === true) {
+            $response['success'] = true;
+            return $response;
+        }
 
         foreach ($items as $item) {
             $response['success'] = true;
@@ -75,12 +83,16 @@ class ApiService
      *
      * @return array
      */
-    private function buildGet(Item $item = null): array
+    private function buildGet(Item $item = null, string $message = ''): array
     {
         $response = [
             'success' => false,
             'data' => [],
         ];
+        if (empty($message) === false) {
+            $response['error'] = $message;
+            return $response;
+        }
 
         if ($item !== null) {
             $response = [
@@ -97,12 +109,16 @@ class ApiService
      *
      * @return array
      */
-    private function buildPost(Item $item = null): array
+    private function buildPost(Item $item = null, string $message = ''): array
     {
         $response = [
             'success' => false,
             'data' => [],
         ];
+        if (empty($message) === false) {
+            $response['error'] = $message;
+            return $response;
+        }
 
         if ($item !== null && $item->getId() !== null) {
             $response = [
@@ -119,12 +135,16 @@ class ApiService
      *
      * @return array
      */
-    private function buildPut(Item $item = null): array
+    private function buildPut(Item $item = null, string $message = ''): array
     {
         $response = [
             'success' => false,
             'data' => [],
         ];
+        if (empty($message) === false) {
+            $response['error'] = $message;
+            return $response;
+        }
 
         if ($item !== null && $item->getId() !== null) {
             $response = [
@@ -141,12 +161,16 @@ class ApiService
      *
      * @return array
      */
-    public function buildDelete(Item $item = null): array
+    public function buildDelete(Item $item = null, string $message = ''): array
     {
         $response = [
             'success' => false,
             'data' => [],
         ];
+        if (empty($message) === false) {
+            $response['error'] = $message;
+            return $response;
+        }
 
         if ($item !== null && $item->getId() === null) {
             $response = [
