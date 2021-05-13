@@ -4,3 +4,28 @@
 #index:
 #    path: /
 #    defaults: { _controller: 'App\Controller\DefaultController::index' }
+
+item_list:
+    path: /api/item
+    defaults: { _controller: App\Controller\ApiController::listAction }
+    methods: GET
+
+item_get:
+    path: /api/item/{id}
+    defaults: { _controller: App\Controller\ApiController::getAction }
+    methods: GET
+
+item_post:
+    path: /api/item
+    defaults: { _controller: App\Controller\ApiController::postAction }
+    methods: POST
+
+item_put:
+    path: /api/item/{id}
+    defaults: { _controller: App\Controller\ApiController::putAction }
+    methods: PUT
+
+item_delete:
+    path: /api/item/{id}
+    defaults: { _controller: App\Controller\ApiController::deleteAction }
+    methods: DELETE
