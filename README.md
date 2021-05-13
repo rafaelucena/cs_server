@@ -36,3 +36,6 @@ bin/console doctrine:migrations:execute --down 'DoctrineMigrations\Version202105
 ```
 
 4.5. For better usage, is recommended to use 8000 for the server api and 8001 for the client
+```bash
+bin/console server:start 8000|8001
+```
