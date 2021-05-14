@@ -161,7 +161,7 @@ class ApiService
      *
      * @return array
      */
-    public function buildDelete(Item $item = null, string $message = ''): array
+    private function buildDelete(Item $item = null, string $message = ''): array
     {
         $response = [
             'success' => false,
